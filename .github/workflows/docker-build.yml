@@ -5,15 +5,11 @@ on:
     branches:
       - main
     tags:
-      - 'v*'  # build on version tags like v1.0.0
+      - 'v*'
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
@@ -25,27 +21,29 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Determine next version
         id: vars
         run: |
-          # Extract the current version from the latest tag
           current_version=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
           if [ -z "$current_version" ]; then
             current_version="v0.0.0"
           fi
-          # Increment the minor version
           IFS='.' read -r -a version_parts <<< "${current_version#v}"
           new_version="v${version_parts[0]}.$((version_parts[1] + 1)).0"
           echo "new_version=$new_version" >> $GITHUB_ENV
 
-      - name: Build and push image
+      - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             johnnmackk/immich-go:latest
             johnnmackk/immich-go:${{ env.new_version }}
