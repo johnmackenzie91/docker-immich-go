@@ -1,6 +1,6 @@
 # Immich-Go Docker Image
 
-This repository contains the Docker image for [immich-go](https://github.com/simulot/immich-go), a tool for managing and processing images.
+This repository contains a Docker image for [immich-go](https://github.com/simulot/immich-go), a tool for managing immich libraries.
 
 ## Docker Hub Repository
 

@@ -24,6 +24,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Determine next version
+        id: vars
+        run: |
+          # Extract the current version from the latest tag
+          current_version=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
+          if [ -z "$current_version" ]; then
+            current_version="v0.0.0"
+          fi
+          # Increment the minor version
+          IFS='.' read -r -a version_parts <<< "${current_version#v}"
+          new_version="v${version_parts[0]}.$((version_parts[1] + 1)).0"
+          echo "new_version=$new_version" >> $GITHUB_ENV
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -31,4 +44,5 @@ jobs:
           push: true
           tags: |
             johnnmackk/immich-go:latest
+            johnnmackk/immich-go:${{ env.new_version }}
             johnnmackk/immich-go:${{ github.ref_name }}
